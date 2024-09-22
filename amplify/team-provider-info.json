@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-fundastachatbotaws-dev-e8deb-authRole",
+      "UnauthRoleArn": "arn:aws:iam::294923484056:role/amplify-fundastachatbotaws-dev-e8deb-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::294923484056:role/amplify-fundastachatbotaws-dev-e8deb-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-fundastachatbotaws-dev-e8deb-deployment",
+      "UnauthRoleName": "amplify-fundastachatbotaws-dev-e8deb-unauthRole",
+      "StackName": "amplify-fundastachatbotaws-dev-e8deb",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:294923484056:stack/amplify-fundastachatbotaws-dev-e8deb/216720a0-762c-11ef-9ba2-0614b212ed4d",
+      "AmplifyAppId": "d2kyd330tfax6g"
+    },
+    "categories": {
+      "auth": {
+        "fundastachatbotaws4cab3bab": {}
+      }
+    }
+  }
+}
