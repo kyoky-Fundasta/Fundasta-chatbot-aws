@@ -18,7 +18,9 @@ class MockContext(LambdaContext):
 
 # Mock event and context
 event = {
-    "body": json.dumps({"input": "Tell me a joke"}),
+    "body": json.dumps(
+        {"input": "FundastAの入社2年目の社員は有給休暇を何日取得できますか"}
+    ),
     "requestContext": {
         "domainName": "example.execute-api.us-east-1.amazonaws.com",
         "stage": "prod",

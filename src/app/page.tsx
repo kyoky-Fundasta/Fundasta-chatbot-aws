@@ -1,101 +1,136 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { withAuthenticator } from '@aws-amplify/ui-react';
+// import { Auth } from 'aws-amplify/auth'; // Updated import
+import { useEffect, useRef, useState } from "react";
+// import awsconfig from './aws-exports';
+
+// Amplify.configure(awsconfig);
+
+function Home() {
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const socketRef = useRef<WebSocket | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  useEffect(() => {
+    const connectWebSocket = async () => {
+      try {
+        const session = await Auth.currentSession();
+        const idToken = session.getIdToken().getJwtToken();
+
+        socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev?token=${idToken}`);
+
+        socketRef.current.onopen = () => {
+          console.log('WebSocket connection established');
+        };
+
+        socketRef.current.onmessage = (event) => {
+          if (!event.data || event.data.trim() === '') {
+            console.log('Received empty message, ignoring');
+            return;
+          }
+
+          try {
+            const data = JSON.parse(event.data);
+            if (data.chunk === "[DONE]") {
+              setIsTyping(false);
+            } else if (data.error) {
+              setMessages(prev => [...prev, { role: "assistant", content: `Error: ${data.error}` }]);
+              setIsTyping(false);
+            } else if (data.chunk) {
+              setMessages(prev => {
+                const newMessages = [...prev];
+                if (newMessages.length > 0 && newMessages[newMessages.length - 1].role === "assistant") {
+                  newMessages[newMessages.length - 1].content += data.chunk;
+                } else {
+                  newMessages.push({ role: "assistant", content: data.chunk });
+                }
+                return newMessages;
+              });
+            }
+          } catch (error) {
+            console.error('Failed to parse WebSocket message:', error, 'Raw message:', event.data);
+            setMessages(prev => [...prev, { role: "assistant", content: "Error: Failed to parse message from server." }]);
+          }
+        };
+
+        socketRef.current.onclose = () => {
+          console.log('WebSocket connection closed');
+        };
+      } 
+      catch (error) {
+        console.error('Failed to connect to WebSocket:', error);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      socketRef.current?.close();
+    };
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+
+    setMessages(prev => [...prev, { role: "user", content: input }]);
+    setInput("");
+    setIsTyping(true);
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ input }));
+    } else {
+      console.error('WebSocket is not connected');
+      setMessages(prev => [...prev, { role: "assistant", content: "Sorry, I'm not connected at the moment." }]);
+      setIsTyping(false);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex flex-col h-screen bg-gray-100">
+      <header className="bg-white shadow-sm p-4">
+        <h1 className="text-xl font-semibold text-center">FundastA AI Assistant</h1>
+      </header>
+      <main className="flex-grow flex flex-col p-4 max-w-3xl mx-auto w-full">
+        <div className="flex-grow overflow-auto mb-4 space-y-4">
+          {messages.map((message, index) => (
+            <div key={index} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div className={`max-w-[80%] p-3 rounded-lg ${
+                message.role === "user" ? "bg-blue-500 text-white" : "bg-white"
+              }`}>
+                {message.content}
+                {index === messages.length - 1 && message.role === "assistant" && isTyping && (
+                  <span className="inline-block animate-pulse">▋</span>
+                )}
+              </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
+        <form onSubmit={handleSubmit} className="flex">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-grow p-3 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Type your message..."
+          />
+          <button type="submit" className="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 transition-colors">
+            Send
+          </button>
+        </form>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
+
+export default withAuthenticator(Home);
