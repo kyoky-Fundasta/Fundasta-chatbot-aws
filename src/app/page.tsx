@@ -1,11 +1,12 @@
 "use client";
 
-// import { withAuthenticator } from '@aws-amplify/ui-react';
-// import { Auth } from 'aws-amplify/auth'; // Updated import
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import { Amplify } from 'aws-amplify';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { useEffect, useRef, useState } from "react";
-// import awsconfig from './aws-exports';
+import awsconfig from '../aws-exports';
 
-// Amplify.configure(awsconfig);
+Amplify.configure(awsconfig);
 
 function Home() {
   const [input, setInput] = useState("");
@@ -23,11 +24,14 @@ function Home() {
   useEffect(() => {
     const connectWebSocket = async () => {
       try {
-        // const session = await Auth.currentSession();
-        // const idToken = session.getIdToken().getJwtToken();
+        const user = await getCurrentUser();
+        const { idToken } = (await fetchAuthSession()).tokens ?? {};
 
-        // socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev?token=${idToken}`);
-        socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev`);
+        if (!idToken) {
+          throw new Error('No ID token available');
+        }
+
+        socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev?token=${idToken.toString()}`);
 
         socketRef.current.onopen = () => {
           console.log('WebSocket connection established');
@@ -63,6 +67,10 @@ function Home() {
           }
         };
 
+        socketRef.current.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+        
         socketRef.current.onclose = () => {
           console.log('WebSocket connection closed');
         };
@@ -134,5 +142,4 @@ function Home() {
   );
 }
 
-// export default withAuthenticator(Home);
-export default (Home);
+export default withAuthenticator(Home);
