@@ -1,6 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 /.vscode
+/.venv
 /lambda/vlambda
 # dependencies
 /node_modules
@@ -61,4 +62,3 @@ amplifytools.xcconfig
 
 # Add to existing .gitignore
 .aws-sam/
-/.venv

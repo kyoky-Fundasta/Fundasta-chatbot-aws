@@ -1,6 +1,6 @@
 "use client";
 
-import { withAuthenticator } from '@aws-amplify/ui-react';
+// import { withAuthenticator } from '@aws-amplify/ui-react';
 // import { Auth } from 'aws-amplify/auth'; // Updated import
 import { useEffect, useRef, useState } from "react";
 // import awsconfig from './aws-exports';
@@ -23,10 +23,11 @@ function Home() {
   useEffect(() => {
     const connectWebSocket = async () => {
       try {
-        const session = await Auth.currentSession();
-        const idToken = session.getIdToken().getJwtToken();
+        // const session = await Auth.currentSession();
+        // const idToken = session.getIdToken().getJwtToken();
 
-        socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev?token=${idToken}`);
+        // socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev?token=${idToken}`);
+        socketRef.current = new WebSocket(`wss://hdo2jjkkf0.execute-api.ap-northeast-1.amazonaws.com/dev`);
 
         socketRef.current.onopen = () => {
           console.log('WebSocket connection established');
@@ -133,4 +134,5 @@ function Home() {
   );
 }
 
-export default withAuthenticator(Home);
+// export default withAuthenticator(Home);
+export default (Home);
