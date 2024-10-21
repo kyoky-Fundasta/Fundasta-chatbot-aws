@@ -25,3 +25,8 @@ body {
     text-wrap: balance;
   }
 }
+
+html, body {
+  height: 100%; /* Ensure html and body take full height */
+  margin: 0; /* Remove default margin */
+}

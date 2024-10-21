@@ -1,0 +1,21 @@
+/* src/app/login/LoginPage.css */
+.login-container {
+  display: flex;
+  flex-direction: column; /* Ensure elements are arranged vertically */
+  align-items: center; /* Center horizontally */
+
+  width: 100%; /* Full width of the body */
+  height: 100vh; /* Full viewport height */
+}
+
+.login-title {
+  text-align: center; /* Center text */
+  margin-top: 20px;
+  margin-bottom: 20px; /* Space between title and Cognito UI */
+}
+
+.cognito-ui-container {
+    flex-direction: column;
+    display: flex; /* Changed to flex to enable justify-content */
+    justify-content: center; /* Center vertically */
+}
