@@ -3,35 +3,43 @@
 import { Authenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
 import { Amplify } from 'aws-amplify';
-import localFont from 'next/font/local';
+import { useRouter } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
 import config from '../amplifyconfiguration.json';
 import './globals.css';
 
 Amplify.configure(config, { ssr: true });
 
-const geistSans = localFont({
-  src: './fonts/GeistVF.woff',
-  variable: '--font-geist-sans',
-  weight: '100 900',
-});
-const geistMono = localFont({
-  src: './fonts/GeistMonoVF.woff',
-  variable: '--font-geist-mono',
-  weight: '100 900',
-});
-
 interface RootLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  const router = useRouter();
+
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Authenticator.Provider>
-          {children}
-        </Authenticator.Provider>
+      <body>
+        <Authenticator>
+          {({ user }) => {
+            return (
+              <AuthenticatedContent user={user} router={router}>
+                {children}
+              </AuthenticatedContent>
+            );
+          }}
+        </Authenticator>
       </body>
     </html>
   );
+}
+
+function AuthenticatedContent({ user, router, children }: { user: any; router: any; children: ReactNode }) {
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
+
+  return user ? <>{children}</> : <div>Loading...</div>;
 }

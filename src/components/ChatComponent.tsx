@@ -1,6 +1,6 @@
 'use client';
 
-import { getCurrentUser } from 'aws-amplify/auth';
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { useEffect, useRef, useState } from 'react';
 
 interface ChatComponentProps {
@@ -34,9 +34,10 @@ function ChatComponent({ signOut }: ChatComponentProps) {
   const connectWebSocket = async () => {
     try {
       // Get current session to retrieve the ID token
-      const session = await getCurrentUser() as any;
-      const idToken = session.getIdToken().getJwtToken();
-
+      // const session = await getCurrentUser() as any;
+      // const idToken = session.getIdToken().getJwtToken();
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens?.idToken?.toString();
       if (!idToken) {
         throw new Error('No ID token available');
       }
